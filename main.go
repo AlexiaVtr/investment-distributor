@@ -66,3 +66,5 @@ func main() {
 var investmentAmount Amount
 var response Credits
 var statisticsData Statistics
+var positiveAverage int64
+var negativeAverage int64

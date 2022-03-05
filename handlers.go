@@ -39,9 +39,10 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 		response.Credit_type_500,
 		response.Credit_type_700, err = CreditAssing.Assing(i, investmentAmount.Investment)
 
-	// Si hubo un error se almacena y se retorna un 400:
+	// Si hubo un error se almacenan los datos para enviar a la BD y se retorna un 400:
 	if err != nil {
 		statisticsData.Total_unsuccessful_assignments += 1
+		negativeAverage += int64(investmentAmount.Investment)
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Println(err)
 	} else {
@@ -51,9 +52,10 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
 
-		// Además se almacena la cantidad en la variable statistics:
+		// Además se almacena cantidad e inversión en la variable statistics:
 		statisticsData.Total_assignments_made += 1
 		statisticsData.Total_successful_assignments += 1
+		positiveAverage += int64(investmentAmount.Investment)
 		log.Print(statisticsData)
 	}
 
@@ -66,15 +68,39 @@ func HandleStatistics(w http.ResponseWriter, r *http.Request) {
 	app, err := firebase.NewApp(context.Background(), nil, sa)
 
 	client, err := app.Firestore(context.Background())
-	if err != nil {
-		log.Fatalln(err)
-	}
-	// Envío de la información a la BD:
-	result, err := client.Collection("statistics").Doc("specific_statistics").Set(context.Background(), statisticsData)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	log.Print(result)
 	defer client.Close()
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Se llama a GetAverage para sacar el promedio:
+	statisticsData.Average_successful_investment = GetAverage(positiveAverage,
+		statisticsData.Total_successful_assignments)
+
+	statisticsData.Average_unsuccessful_investment = GetAverage(negativeAverage,
+		statisticsData.Total_unsuccessful_assignments)
+
+	// Envío de la información a la BD:
+	resultSet, err := client.Collection("statistics").Doc("specific_statistics").Set(context.Background(), statisticsData)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Print(resultSet)
+
+	//Obtener los datos desde la BD:
+	resultGet, err := client.Collection("statistics").Doc("specific_statistics").Get(context.Background())
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Fatalln(err)
+	} else {
+
+		// Si no hay errores, retorna la respuesta:
+		response := resultGet.Data()
+		data, _ := json.Marshal(response)
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
+	}
 
 }

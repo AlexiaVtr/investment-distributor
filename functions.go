@@ -93,3 +93,10 @@ func getCredit(i, a, b, c int32) (int32, int32, int32) {
 	return creditA, creditB, creditC
 
 }
+
+// Retorna el promedio de lo enviado:
+func GetAverage(a int64, b int64) float64 {
+	var c float64
+	c = float64(a) / float64(b)
+	return c
+}

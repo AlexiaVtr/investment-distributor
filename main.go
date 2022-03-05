@@ -3,6 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
 )
 
 // Interfaces
@@ -47,8 +50,21 @@ func (i Investment) PrintCredit(inv, credit300, credit500, credit700 int32) {
 }
 
 func main() {
+
+	//Variables
 	var i Investment
 	var investment int32
+
+	//Servidor
+
+	// Puerto dinámico:
+	Port := os.Getenv("PORT")
+	if Port == "" {
+		Port = "8000"
+	}
+	log.Fatal(http.ListenAndServe("localhost"+":"+Port, nil))
+
+	//Distribución de la inversión:
 
 	fmt.Println("Inserte la inversión:")
 	fmt.Scanln(&investment)

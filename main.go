@@ -3,8 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
-	"net/http"
 	"os"
 )
 
@@ -25,6 +23,17 @@ type error interface {
 type Investment int32
 
 type MyError struct {
+}
+
+// Request and Responses Structs:
+type Amount struct {
+	Investment int32 `json:"investment"`
+}
+
+type Credits struct {
+	Credit_type_300 int32 `json:"credit_type_300"`
+	Credit_type_500 int32 `json:"credit_type_500"`
+	Credit_type_700 int32 `json:"credit_type_700"`
 }
 
 //Methods
@@ -49,11 +58,11 @@ func (i Investment) PrintCredit(inv, credit300, credit500, credit700 int32) {
 	fmt.Printf("%d: %d x $300 + %d x $500 + %d x $700 = $%d", inv, credit300, credit500, credit700, inv)
 }
 
-func main() {
+//variables globales:
+var investmentAmount Amount
+var response Credits
 
-	//Variables
-	var i Investment
-	var investment int32
+func main() {
 
 	//Servidor
 
@@ -62,22 +71,13 @@ func main() {
 	if Port == "" {
 		Port = "8000"
 	}
-	log.Fatal(http.ListenAndServe("localhost"+":"+Port, nil))
+	server := NewServer(":" + Port)
+	fmt.Println("Server listen in:", server)
+	//Endpoints:
 
-	//Distribución de la inversión:
+	server.Handle("/", "GET", HandleRoot)
+	server.Handle("/credit-assignment", "POST", HandleCreditAssignment)
+	//	server.Handle("/statistics", "POST", statistics)
 
-	fmt.Println("Inserte la inversión:")
-	fmt.Scanln(&investment)
-
-	// Se llama al método Assing para obtener los créditos posibles:
-	credit300, credit500, credit700, err := CreditAssing.Assing(i, investment)
-
-	// Si hubo un error se imprime:
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		// De lo contrario se responde con el método PrintCredit:
-		CreditAssing.PrintCredit(i, investment, credit300, credit500, credit700)
-
-	}
+	server.Listen()
 }

@@ -9,7 +9,7 @@ type Server struct {
 	router *Router
 }
 
-// Servidor manipulable desde el main, * para evitar copias.
+// Obtiene el puerto y lo retorna con la ruta:
 func NewServer(port string) *Server {
 	return &Server{
 		port:   port,
@@ -31,4 +31,15 @@ func (s *Server) Listen() error {
 		return err
 	}
 	return nil
+}
+
+// Agrega la ruta y método al Handler del main:
+
+func (s *Server) Handle(path string, method string,
+	handler http.HandlerFunc) {
+	_, exist := s.router.rules[path]
+	if !exist {
+		s.router.rules[path] = make(map[string]http.HandlerFunc)
+	}
+	s.router.rules[path][method] = handler
 }

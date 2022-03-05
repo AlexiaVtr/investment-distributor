@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-
-	"./repository"
 )
 
 // Interfaces
@@ -19,23 +17,6 @@ type CreditAssing interface {
 //Manejo de errores
 type error interface {
 	Error() string
-}
-
-//Structs
-type Investment int32
-
-type MyError struct {
-}
-
-// Request and Responses Structs:
-type Amount struct {
-	Investment int32 `json:"investment"`
-}
-
-type Credits struct {
-	Credit_type_300 int32 `json:"credit_type_300"`
-	Credit_type_500 int32 `json:"credit_type_500"`
-	Credit_type_700 int32 `json:"credit_type_700"`
 }
 
 //Methods
@@ -71,16 +52,17 @@ func main() {
 	}
 	server := NewServer(":" + Port)
 	fmt.Println("Server listen in port:", Port)
-	//Endpoints:
 
+	//Endpoints:
 	server.Handle("/", "GET", HandleRoot)
 	server.Handle("/credit-assignment", "POST", HandleCreditAssignment)
-	//	server.Handle("/statistics", "POST", statistics)
+	server.Handle("/statistics", "POST", HandleStatistics)
 
 	server.Listen()
+
 }
 
 //variables globales:
 var investmentAmount Amount
 var response Credits
-var statistics repository.Statistics
+var statisticsData Statistics

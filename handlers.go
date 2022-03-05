@@ -1,9 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+
+	firebase "firebase.google.com/go"
+	"google.golang.org/api/option"
 )
 
 // Declaración de variables para los responses:
@@ -36,7 +41,7 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 
 	// Si hubo un error se almacena y se retorna un 400:
 	if err != nil {
-		statistics.Total_unsuccessful_assignments += 1
+		statisticsData.Total_unsuccessful_assignments += 1
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Println(err)
 	} else {
@@ -47,8 +52,29 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 		w.Write(data)
 
 		// Además se almacena la cantidad en la variable statistics:
-		statistics.Total_assignments_made += 1
-		statistics.Total_successful_assignments += 1
+		statisticsData.Total_assignments_made += 1
+		statisticsData.Total_successful_assignments += 1
+		log.Print(statisticsData)
 	}
+
+}
+
+func HandleStatistics(w http.ResponseWriter, r *http.Request) {
+	log.Print(statisticsData)
+	// Conexión con el SDK:
+	sa := option.WithCredentialsFile("serviceAccountKey.json")
+	app, err := firebase.NewApp(context.Background(), nil, sa)
+
+	client, err := app.Firestore(context.Background())
+	if err != nil {
+		log.Fatalln(err)
+	}
+	// Envío de la información a la BD:
+	result, err := client.Collection("statistics").Doc("specific_statistics").Set(context.Background(), statisticsData)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Print(result)
+	defer client.Close()
 
 }

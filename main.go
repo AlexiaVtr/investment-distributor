@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+
+	"./repository"
 )
 
 // Interfaces
@@ -58,10 +60,6 @@ func (i Investment) PrintCredit(inv, credit300, credit500, credit700 int32) {
 	fmt.Printf("%d: %d x $300 + %d x $500 + %d x $700 = $%d", inv, credit300, credit500, credit700, inv)
 }
 
-//variables globales:
-var investmentAmount Amount
-var response Credits
-
 func main() {
 
 	//Servidor
@@ -81,3 +79,8 @@ func main() {
 
 	server.Listen()
 }
+
+//variables globales:
+var investmentAmount Amount
+var response Credits
+var statistics repository.Statistics

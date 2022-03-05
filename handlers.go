@@ -36,6 +36,7 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 
 	// Si hubo un error se almacena y se retorna un 400:
 	if err != nil {
+		statistics.Total_unsuccessful_assignments += 1
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Println(err)
 	} else {
@@ -44,6 +45,10 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
+
+		// Además se almacena la cantidad en la variable statistics:
+		statistics.Total_assignments_made += 1
+		statistics.Total_successful_assignments += 1
 	}
 
 }

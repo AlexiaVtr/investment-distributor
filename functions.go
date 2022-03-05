@@ -8,10 +8,10 @@ func GetCredit(inv, credit300, credit500, credit700 int32) (int32, int32, int32,
 	switch {
 
 	case n > 0:
-		credit300, credit500, credit700 = getCredit(n, 700, 500, 300)
+		credit700, credit500, credit300 = getCredit(n, 700, 500, 300)
 
 		//Si los contadores son ">0" entonces se finalizó la distribución correctamente:
-		if credit300 != 0 && credit500 != 0 && credit700 != 0 {
+		if credit300 != 0 || credit500 != 0 || credit700 != 0 {
 			return credit300, credit500, credit700, nil
 		}
 
@@ -22,34 +22,34 @@ func GetCredit(inv, credit300, credit500, credit700 int32) (int32, int32, int32,
 
 		// El orden de las restas cambia en cada caso:
 		credit300, credit500, credit700 = getCredit(n, 300, 500, 700)
-		if credit300 != 0 && credit500 != 0 && credit700 != 0 {
+		if credit300 != 0 || credit500 != 0 || credit700 != 0 {
 			return credit300, credit500, credit700, nil
 		}
 		fallthrough
 
 	case n > 0:
-		credit300, credit500, credit700 = getCredit(n, 500, 300, 700)
-		if credit300 != 0 && credit500 != 0 && credit700 != 0 {
+		credit500, credit300, credit700 = getCredit(n, 500, 300, 700)
+		if credit300 != 0 || credit500 != 0 || credit700 != 0 {
 			return credit300, credit500, credit700, nil
 		}
 		fallthrough
 
 	case n > 0:
-		credit300, credit500, credit700 = getCredit(n, 500, 700, 300)
-		if credit300 != 0 && credit500 != 0 && credit700 != 0 {
+		credit500, credit700, credit300 = getCredit(n, 500, 700, 300)
+		if credit300 != 0 || credit500 != 0 || credit700 != 0 {
 			return credit300, credit500, credit700, nil
 		}
 		fallthrough
 
 	case n > 0:
-		credit300, credit500, credit700 = getCredit(n, 700, 300, 500)
-		if credit300 != 0 && credit500 != 0 && credit700 != 0 {
+		credit700, credit300, credit500 = getCredit(n, 700, 300, 500)
+		if credit300 != 0 || credit500 != 0 || credit700 != 0 {
 			return credit300, credit500, credit700, nil
 		}
 		fallthrough
 	case n > 0:
-		credit300, credit500, credit700 = getCredit(n, 300, 700, 500)
-		if credit300 != 0 && credit500 != 0 && credit700 != 0 {
+		credit300, credit700, credit500 = getCredit(n, 300, 700, 500)
+		if credit300 != 0 || credit500 != 0 || credit700 != 0 {
 			return credit300, credit500, credit700, nil
 		}
 

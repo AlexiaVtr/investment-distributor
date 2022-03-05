@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -23,30 +22,24 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 
 	//Variables:
 	var i Investment
-	var investment int32
 
 	//Obtención de requets:
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&investmentAmount)
-	log.Fatal(err)
 
 	//Distribución de la inversión:
-
-	//
-	fmt.Println(investmentAmount.Investment)
-	investment = investmentAmount.Investment
 
 	// Se llama al método Assing para obtener los créditos posibles:
 	response.Credit_type_300,
 		response.Credit_type_500,
-		response.Credit_type_700, err = CreditAssing.Assing(i, investment)
+		response.Credit_type_700, err = CreditAssing.Assing(i, investmentAmount.Investment)
 
 	// Si hubo un error se almacena y se retorna un 400:
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Fatal(err)
+		fmt.Println(err)
 	} else {
-		// De lo contrario se transforma en JSON y retorna:
+		// De lo contrario se transforma la resp en JSON y se retorna 200:
 		data, _ := json.Marshal(response)
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")

@@ -72,7 +72,7 @@ func main() {
 		Port = "8000"
 	}
 	server := NewServer(":" + Port)
-	fmt.Println("Server listen in:", server)
+	fmt.Println("Server listen in port:", Port)
 	//Endpoints:
 
 	server.Handle("/", "GET", HandleRoot)

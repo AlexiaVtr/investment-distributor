@@ -57,6 +57,7 @@ func main() {
 	server.Handle("/", "GET", HandleRoot)
 	server.Handle("/credit-assignment", "POST", HandleCreditAssignment)
 	server.Handle("/statistics", "POST", HandleStatistics)
+	server.Handle("/statistics", "DELETE", HandleDeleteStatistics)
 
 	server.Listen()
 
@@ -66,5 +67,4 @@ func main() {
 var investmentAmount Amount
 var response Credits
 var statisticsData Statistics
-var positiveAverage int64
-var negativeAverage int64
+var average Average

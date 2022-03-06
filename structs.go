@@ -23,3 +23,8 @@ type Statistics struct {
 	Total_successful_assignments    int64   `json:"total_successful_assignments"`
 	Total_unsuccessful_assignments  int64   `json:"total_unsuccessful_assignments"`
 }
+
+type Average struct {
+	Negative int64 `json:"negative"`
+	Positive int64 `json:"positive"`
+}

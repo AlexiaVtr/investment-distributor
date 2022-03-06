@@ -1,14 +1,10 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-
-	firebase "firebase.google.com/go"
-	"google.golang.org/api/option"
 )
 
 // Declaración de variables para los responses:
@@ -24,15 +20,13 @@ func HandleRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
-
-	//Variables:
 	var i Investment
 
 	//Obtención de requets:
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&investmentAmount)
 
-	//Distribución de la inversión:
+	//Distribución de la inversión.
 
 	// Se registra la asignación:
 	statisticsData.Total_assignments_made += 1
@@ -44,88 +38,83 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 	// Si hubo un error se almacenan los datos para enviar a la BD y se retorna un 400:
 	if err != nil {
 		statisticsData.Total_unsuccessful_assignments += 1
-		negativeAverage += int64(investmentAmount.Investment)
+
+		// Se almacena la inversión completa para luego sacar el promedio:
+		average.Negative += int64(investmentAmount.Investment)
+
+		//Respuesta:
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Println(err)
 	} else {
-		// De lo contrario se transforma la resp en JSON y se retorna 200:
+		// De lo contrario se transforma la resp en JSON y se retorna con 200:
 		data, _ := json.Marshal(response)
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
 
-		// Además se almacena cantidad e inversión en la variable statistics:
+		// Adicional se almacena cantidad e inversión en la variable statistics:
 		statisticsData.Total_successful_assignments += 1
-		positiveAverage += int64(investmentAmount.Investment)
+		average.Positive += int64(investmentAmount.Investment)
 		log.Print(statisticsData)
+	}
+	// Se almacenan los datos en Firebase:
+	SetInvestmentData(average)
+	SetStatisticsData(statisticsData)
+	//Se resetean los datos de las variables usadas:
+	DeleteData()
+}
+
+func HandleStatistics(w http.ResponseWriter, r *http.Request) {
+	var err error
+	// Obtener los datos desde la BD:
+	statisticsData, err = GetStatisticsData()
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Obtener el promedio de inversión:
+	// Se toma la inversión total almacenada en la bd:
+	average.Negative, average.Positive, err = GetInvestmentData()
+
+	// Se llama a GetAverage para sacar el promedio:
+	if average.Positive > 0 {
+		statisticsData.Average_successful_investment = GetAverage(average.Positive,
+			statisticsData.Total_successful_assignments)
+	}
+	if average.Negative > 0 {
+		statisticsData.Average_unsuccessful_investment = GetAverage(average.Negative,
+			statisticsData.Total_unsuccessful_assignments)
+	}
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Fatalln(err)
+	} else {
+
+		// Envío de la información a la BD con el promedio actualizado:
+		err = SetStatisticsData(statisticsData)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		// Si no hay errores, retorna la respuesta:
+		data, _ := json.Marshal(statisticsData)
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
 	}
 
 }
 
-func HandleStatistics(w http.ResponseWriter, r *http.Request) {
-	log.Print(statisticsData)
-	// Conexión con el SDK:
-	sa := option.WithCredentialsFile("serviceAccountKey.json")
-	app, err := firebase.NewApp(context.Background(), nil, sa)
+func HandleDeleteStatistics(w http.ResponseWriter, r *http.Request) {
 
-	client, err := app.Firestore(context.Background())
-	defer client.Close()
-
+	// Borra los datos de las variables de statistics e investment:
+	DeleteData()
+	err := SetStatisticsData(statisticsData)
 	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Se llama a GetAverage para sacar el promedio:
-	if positiveAverage > 0 {
-		statisticsData.Average_successful_investment = GetAverage(positiveAverage,
-			statisticsData.Total_successful_assignments)
-	}
-	if negativeAverage > 0 {
-		statisticsData.Average_unsuccessful_investment = GetAverage(negativeAverage,
-			statisticsData.Total_unsuccessful_assignments)
-	}
-
-	//Obtener los datos desde la BD:
-	resultGet, err := client.Collection("statistics").Doc("specific_statistics").Get(context.Background())
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
 		log.Fatalln(err)
 	} else {
-
-		// Envío de la información a la BD:
-
-		//Se traduce la data obtenida a JSON y se almacena en un map:
-		response := resultGet.Data()
-		data, _ := json.Marshal(response)
-
-		// Merge de datos de variables junto con los de BD:
-
-		var elementArray []int64
-
-		//Se convierten los elementos string del map a int64 dentro de elementArray:
-		for _, elemento := range response {
-			newElement, _ := elemento.(int64)
-			elementArray = append(elementArray, newElement)
-		}
-
-		// Los datos de statisticsData se suman a los de elementArray:
-		statisticsData.Average_successful_investment += float32(elementArray[0])
-		statisticsData.Total_assignments_made += elementArray[1]
-		statisticsData.Total_successful_assignments += elementArray[2]
-		statisticsData.Average_unsuccessful_investment += float32(elementArray[3])
-		statisticsData.Total_unsuccessful_assignments += elementArray[4]
-
-		// Se almacenan los datos modificados en Firebase:
-		resultSet, err := client.Collection("statistics").Doc("specific_statistics").Set(context.Background(), statisticsData)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		log.Print(resultSet)
-
-		// Si no hay errores, retorna la respuesta:
 		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(data)
+		log.Print("Se ha borrado la información.")
 	}
-
 }

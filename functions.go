@@ -266,33 +266,3 @@ func GetInvestmentData() (Average, error) {
 
 	return dataS, err
 }
-
-// Merge de datos de la BD con statisticsData:
-func MergeData(a Statistics, b map[string]interface{}) Statistics {
-
-	// Merge de datos de variables junto con los de BD:
-	elementArray := DistributeData(b)
-
-	// Los datos de dataS se suman a los de elementArray.
-	// La conversión a float32 es necesaria para coincidir con StatisticsData:
-	a.Average_successful_investment = elementArray[0]
-	a.Total_assignments_made = elementArray[1]
-	a.Total_successful_assignments = elementArray[2]
-	a.Average_unsuccessful_investment = elementArray[3]
-	a.Total_unsuccessful_assignments = elementArray[4]
-	return a
-}
-
-// Convierte un map en array:
-func DistributeData(a map[string]interface{}) []int64 {
-	// Merge de datos de variables junto con los de BD:
-	var elementArray []int64
-
-	//Se convierten los elementos string del map a int64 dentro de elementArray:
-	for _, elemento := range a {
-		newElement, _ := elemento.(int64)
-		elementArray = append(elementArray, newElement)
-	}
-
-	return elementArray
-}

@@ -34,6 +34,8 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 
 	//Distribución de la inversión:
 
+	// Se registra la asignación:
+	statisticsData.Total_assignments_made += 1
 	// Se llama al método Assing para obtener los créditos posibles:
 	response.Credit_type_300,
 		response.Credit_type_500,
@@ -53,7 +55,6 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 		w.Write(data)
 
 		// Además se almacena cantidad e inversión en la variable statistics:
-		statisticsData.Total_assignments_made += 1
 		statisticsData.Total_successful_assignments += 1
 		positiveAverage += int64(investmentAmount.Investment)
 		log.Print(statisticsData)
@@ -75,18 +76,14 @@ func HandleStatistics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Se llama a GetAverage para sacar el promedio:
-	statisticsData.Average_successful_investment = GetAverage(positiveAverage,
-		statisticsData.Total_successful_assignments)
-
-	statisticsData.Average_unsuccessful_investment = GetAverage(negativeAverage,
-		statisticsData.Total_unsuccessful_assignments)
-
-	// Envío de la información a la BD:
-	resultSet, err := client.Collection("statistics").Doc("specific_statistics").Set(context.Background(), statisticsData)
-	if err != nil {
-		log.Fatalln(err)
+	if positiveAverage > 0 {
+		statisticsData.Average_successful_investment = GetAverage(positiveAverage,
+			statisticsData.Total_successful_assignments)
 	}
-	log.Print(resultSet)
+	if negativeAverage > 0 {
+		statisticsData.Average_unsuccessful_investment = GetAverage(negativeAverage,
+			statisticsData.Total_unsuccessful_assignments)
+	}
 
 	//Obtener los datos desde la BD:
 	resultGet, err := client.Collection("statistics").Doc("specific_statistics").Get(context.Background())
@@ -95,9 +92,37 @@ func HandleStatistics(w http.ResponseWriter, r *http.Request) {
 		log.Fatalln(err)
 	} else {
 
-		// Si no hay errores, retorna la respuesta:
+		// Envío de la información a la BD:
+
+		//Se traduce la data obtenida a JSON y se almacena en un map:
 		response := resultGet.Data()
 		data, _ := json.Marshal(response)
+
+		// Merge de datos de variables junto con los de BD:
+
+		var elementArray []int64
+
+		//Se convierten los elementos string del map a int64 dentro de elementArray:
+		for _, elemento := range response {
+			newElement, _ := elemento.(int64)
+			elementArray = append(elementArray, newElement)
+		}
+
+		// Los datos de statisticsData se suman a los de elementArray:
+		statisticsData.Average_successful_investment += float32(elementArray[0])
+		statisticsData.Total_assignments_made += elementArray[1]
+		statisticsData.Total_successful_assignments += elementArray[2]
+		statisticsData.Average_unsuccessful_investment += float32(elementArray[3])
+		statisticsData.Total_unsuccessful_assignments += elementArray[4]
+
+		// Se almacenan los datos modificados en Firebase:
+		resultSet, err := client.Collection("statistics").Doc("specific_statistics").Set(context.Background(), statisticsData)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Print(resultSet)
+
+		// Si no hay errores, retorna la respuesta:
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)

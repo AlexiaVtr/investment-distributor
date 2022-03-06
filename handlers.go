@@ -38,7 +38,7 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 	// Si hubo un error se almacenan los datos para enviar a la BD y se retorna un 400:
 	if err != nil {
 		statisticsData.Total_unsuccessful_assignments += 1
-
+		PutInvestmentData(average)
 		// Se almacena la inversión completa para luego sacar el promedio:
 		average.Negative += int64(investmentAmount.Investment)
 
@@ -49,58 +49,37 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 		// De lo contrario se transforma la resp en JSON y se retorna con 200:
 		data, _ := json.Marshal(response)
 		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(data)
 
 		// Adicional se almacena cantidad e inversión en la variable statistics:
 		statisticsData.Total_successful_assignments += 1
+		statisticsData.Total_assignments_made += 1
 		average.Positive += int64(investmentAmount.Investment)
 		log.Print(statisticsData)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
+
 	}
 	// Se almacenan los datos en Firebase:
-	SetInvestmentData(average)
-	SetStatisticsData(statisticsData)
+	PutInvestmentData(average)
+	PutStatisticsData(statisticsData)
 	//Se resetean los datos de las variables usadas:
 	DeleteData()
 }
 
 func HandleStatistics(w http.ResponseWriter, r *http.Request) {
 	var err error
-	// Obtener los datos desde la BD:
-	statisticsData, err = GetStatisticsData()
 
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Obtener el promedio de inversión:
-	// Se toma la inversión total almacenada en la bd:
-	average.Negative, average.Positive, err = GetInvestmentData()
-
-	// Se llama a GetAverage para sacar el promedio:
-	if average.Positive > 0 {
-		statisticsData.Average_successful_investment = GetAverage(average.Positive,
-			statisticsData.Total_successful_assignments)
-	}
-	if average.Negative > 0 {
-		statisticsData.Average_unsuccessful_investment = GetAverage(average.Negative,
-			statisticsData.Total_unsuccessful_assignments)
-	}
+	// Se calcula y almacena el promedio:
+	err = CalculateAverage()
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Fatalln(err)
+		log.Fatalln("HandleStatistics:", err)
 	} else {
-
-		// Envío de la información a la BD con el promedio actualizado:
-		err = SetStatisticsData(statisticsData)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
 		// Si no hay errores, retorna la respuesta:
+		statisticsData, err = GetStatisticsData()
 		data, _ := json.Marshal(statisticsData)
 		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
 	}
 
@@ -111,6 +90,7 @@ func HandleDeleteStatistics(w http.ResponseWriter, r *http.Request) {
 	// Borra los datos de las variables de statistics e investment:
 	DeleteData()
 	err := SetStatisticsData(statisticsData)
+	err = SetInvestmentData(average)
 	if err != nil {
 		log.Fatalln(err)
 	} else {

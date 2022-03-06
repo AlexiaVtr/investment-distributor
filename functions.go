@@ -2,11 +2,22 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 
+	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/option"
 )
+
+//Conexión con el SDK de Firebase:
+func DBConnection() (*firestore.Client, error) {
+	sa := option.WithCredentialsFile("serviceAccountKey.json")
+	app, err := firebase.NewApp(context.Background(), nil, sa)
+
+	client, err := app.Firestore(context.Background())
+	return client, err
+}
 
 // Realiza la repartición de la inversión a los diferentes créditos:
 func GetCredit(inv, credit300, credit500, credit700 int32) (int32, int32, int32, error) {
@@ -103,10 +114,38 @@ func getCredit(i, a, b, c int32) (int32, int32, int32) {
 }
 
 // Retorna el promedio de lo enviado:
-func GetAverage(a int64, b int64) float32 {
-	var c float32
-	c = float32(a) / float32(b)
+func GetAverage(a int64, b int64) int64 {
+	var c int64
+	c = a / b
+	log.Print("GetAverage:", a, b, c)
 	return c
+}
+
+func CalculateAverage() (err error) {
+	// Obtener el promedio de inversión.
+
+	// Toma los datos desde la BD:
+	statisticsData, err = GetStatisticsData()
+
+	// Se toma la inversión total almacenada en la bd:
+	average, err = GetInvestmentData()
+
+	// Se llama a GetAverage para sacar el promedio:
+	if average.Positive > 0 && statisticsData.Total_successful_assignments > 0 {
+		statisticsData.Average_successful_investment = GetAverage(average.Positive,
+			statisticsData.Total_successful_assignments)
+	}
+	if average.Negative > 0 && statisticsData.Total_unsuccessful_assignments > 0 {
+		statisticsData.Average_unsuccessful_investment = GetAverage(average.Negative,
+			statisticsData.Total_unsuccessful_assignments)
+	}
+	// Envío de la información a la BD con el promedio actualizado:
+	err = SetStatisticsData(statisticsData)
+	if err != nil {
+		log.Fatalln("SetStatisticData:", err)
+	}
+	DeleteData()
+	return err
 }
 
 // Borra los datos de las variables statistics:
@@ -122,35 +161,67 @@ func DeleteData() {
 }
 
 // Almacena la data recibida a specific_statistics en Firebase:
+func PutStatisticsData(data Statistics) error {
+
+	// Conexión con el SDK:
+	client, err := DBConnection()
+	defer client.Close()
+
+	//Merge de los datos ingresados y los datos de la BD:
+	var databd Statistics
+	databd, err = GetStatisticsData()
+	data.Total_assignments_made += databd.Total_assignments_made
+	data.Total_successful_assignments += databd.Total_successful_assignments
+	data.Total_unsuccessful_assignments += databd.Total_unsuccessful_assignments
+	// Se almacenan los datos modificados en Firebase:
+	resultSet, err := client.Collection("statistics").Doc("specific_statistics").Set(context.Background(), data)
+	log.Print(resultSet, "specific_stadistics almacenado con éxito.")
+
+	return err
+}
+
+// Reemplaza la bd con la data recibida en specific_stadistic en Firebase:
 func SetStatisticsData(data Statistics) error {
 
 	// Conexión con el SDK:
-	sa := option.WithCredentialsFile("serviceAccountKey.json")
-	app, err := firebase.NewApp(context.Background(), nil, sa)
-
-	client, err := app.Firestore(context.Background())
+	client, err := DBConnection()
 	defer client.Close()
 
 	// Se almacenan los datos modificados en Firebase:
 	resultSet, err := client.Collection("statistics").Doc("specific_statistics").Set(context.Background(), data)
-	log.Print(resultSet, "almacenado con éxito.")
+	log.Print(resultSet, "specific_stadistics almacenado con éxito.")
 
 	return err
 }
 
 // Almacena la data recibida a specific_statistics en Firebase:
-func SetInvestmentData(data Average) error {
+func PutInvestmentData(data Average) error {
 
 	// Conexión con el SDK:
-	sa := option.WithCredentialsFile("serviceAccountKey.json")
-	app, err := firebase.NewApp(context.Background(), nil, sa)
+	client, err := DBConnection()
+	defer client.Close()
 
-	client, err := app.Firestore(context.Background())
+	//Merge de los datos ingresados y los datos de la BD:
+	var databd Average
+	databd, err = GetInvestmentData()
+	data.Negative += databd.Negative
+	data.Positive += databd.Positive
+	// Se almacenan los datos modificados en Firebase:
+	resultSet, err := client.Collection("statistics").Doc("investment").Set(context.Background(), data)
+	log.Print(resultSet, data, "investment almacenado con éxito.")
+
+	return err
+}
+
+// Reemplaza la bd con la data recibida en investment en Firebase:
+func SetInvestmentData(data Average) error {
+
+	client, err := DBConnection()
 	defer client.Close()
 
 	// Se almacenan los datos modificados en Firebase:
 	resultSet, err := client.Collection("statistics").Doc("investment").Set(context.Background(), data)
-	log.Print(resultSet, "almacenado con éxito.")
+	log.Print(resultSet, data, "investment almacenado con éxito.")
 
 	return err
 }
@@ -160,32 +231,27 @@ func GetStatisticsData() (Statistics, error) {
 	var dataS Statistics
 
 	// Conexión con el SDK:
-	sa := option.WithCredentialsFile("serviceAccountKey.json")
-	app, err := firebase.NewApp(context.Background(), nil, sa)
-
-	client, err := app.Firestore(context.Background())
+	client, err := DBConnection()
 	defer client.Close()
 
-	// Se almacenan los datos modificados en Firebase:
+	// Se almacenan los datos de la BD:
 	resultGet, err := client.Collection("statistics").Doc("specific_statistics").Get(context.Background())
 
 	//Se almacena la data en un map:
 	response := resultGet.Data()
 
 	// Depuración de la data para almacenar lo obtenido en dataS:
-	dataS = MergeData(dataS, response)
+	data, _ := json.Marshal(response)
+	json.Unmarshal(data, &dataS)
 
 	return dataS, err
 }
 
 // Obtiene los datos de specific_statistics en Firebase:
-func GetInvestmentData() (int64, int64, error) {
-
+func GetInvestmentData() (Average, error) {
+	var dataS Average
 	// Conexión con el SDK:
-	sa := option.WithCredentialsFile("serviceAccountKey.json")
-	app, err := firebase.NewApp(context.Background(), nil, sa)
-
-	client, err := app.Firestore(context.Background())
+	client, err := DBConnection()
 	defer client.Close()
 
 	// Se almacenan los datos modificados en Firebase:
@@ -194,10 +260,11 @@ func GetInvestmentData() (int64, int64, error) {
 	// Se almacena la data en un map:
 	response := resultGet.Data()
 
-	// Convertir map en array:
-	elementArray := DistributeData(response)
+	// Depuración de la data para almacenar lo obtenido en dataS:
+	data, _ := json.Marshal(response)
+	json.Unmarshal(data, &dataS)
 
-	return elementArray[0], elementArray[1], err
+	return dataS, err
 }
 
 // Merge de datos de la BD con statisticsData:
@@ -208,10 +275,10 @@ func MergeData(a Statistics, b map[string]interface{}) Statistics {
 
 	// Los datos de dataS se suman a los de elementArray.
 	// La conversión a float32 es necesaria para coincidir con StatisticsData:
-	a.Average_successful_investment = float32(elementArray[0])
+	a.Average_successful_investment = elementArray[0]
 	a.Total_assignments_made = elementArray[1]
 	a.Total_successful_assignments = elementArray[2]
-	a.Average_unsuccessful_investment = float32(elementArray[3])
+	a.Average_unsuccessful_investment = elementArray[3]
 	a.Total_unsuccessful_assignments = elementArray[4]
 	return a
 }

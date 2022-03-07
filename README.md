@@ -36,7 +36,7 @@ La API resuelve las siguientes consultas:</br></br>
 {"credit_type_300":1,"credit_type_500":0,"credit_type_700":0}
 ```
 ---
-
+</br>
 • Operación: /statistics/ </br>
 • Funcionalidad: </br>
 ㅤㅤ- Retorna las siguientes estádisticas en base a la información almacenada en la base de datos:</br>
@@ -57,6 +57,7 @@ La API resuelve las siguientes consultas:</br></br>
 {"average_successful_investment":300,"average_unsuccessful_investment":0,"total_assignments_made":2,"total_successful_assignments":2,"total_unsuccessful_assignments":0}
 ```
 ---
+</br>
 • Operación: /statistics/ </br>
 • Funcionalidad: </br>
 ㅤㅤ- Resetea las estadísticas eliminando los datos almacenados en la base de datos.</br>

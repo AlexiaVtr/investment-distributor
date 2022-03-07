@@ -1,6 +1,8 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+)
 
 // Estructura para los endpoint:
 type Router struct {
@@ -26,7 +28,6 @@ func (r *Router) FindHandler(path string, method string) (http.HandlerFunc, bool
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	handler, methodExist, exist := r.FindHandler(request.URL.Path, request.Method)
-
 	if !exist {
 		w.WriteHeader(http.StatusNotFound)
 		return

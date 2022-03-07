@@ -7,18 +7,6 @@ import (
 	"net/http"
 )
 
-// Declaración de variables para los responses:
-
-var Code404 string = "RESPONSE CODE: 404"
-var Code200 string = "RESPONSE CODE: 200"
-
-// Handlers de redirección:
-
-func HandleRoot(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusExpectationFailed)
-	fmt.Fprintf(w, Code404)
-}
-
 func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 	var i Investment
 
@@ -88,7 +76,7 @@ func HandleStatistics(w http.ResponseWriter, r *http.Request) {
 func HandleDeleteStatistics(w http.ResponseWriter, r *http.Request) {
 
 	// Borra los datos de las variables de statistics e investment:
-	DeleteData(statisticsData, average)
+	_, _ = DeleteData(statisticsData, average)
 	err := SetStatisticsData(statisticsData)
 	err = SetInvestmentData(average)
 	if err != nil {

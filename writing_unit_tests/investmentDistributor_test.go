@@ -2,12 +2,12 @@ package main_test
 
 import (
 	main "investmentsDistributor"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
-// La variable "inv" debe ser siempre multiplo de 100.
-// Si se entrega un valor que de un resto != de 0 entonces devolverá un error ->
-// y no se considera una falla de test, siendo este un requisito del reto.
+// Function.go
 func TestGetCredit(t *testing.T) {
 	a, b, c, err := main.GetCredit(3000)
 
@@ -128,8 +128,9 @@ func TestPutInvestmentData(t *testing.T) {
 func TestDeleteData(t *testing.T) {
 	s, _ := main.GetStatisticsData()
 	a, _ := main.GetInvestmentData()
-	main.DeleteData(s, a)
-	if s.Total_assignments_made != 0 && s.Total_successful_assignments != 0 &&
+	s, a = main.DeleteData(s, a)
+	if s.Average_successful_investment != 0 && s.Average_unsuccessful_investment != 0 &&
+		s.Total_assignments_made != 0 && s.Total_successful_assignments != 0 &&
 		s.Total_unsuccessful_assignments != 0 && a.Negative != 0 && a.Positive != 0 {
 		t.Error("TestDeleteData no ha funcionado.")
 		t.Fail()
@@ -137,4 +138,56 @@ func TestDeleteData(t *testing.T) {
 		t.Log("TestDeleteData ha funcionado correctamente.")
 	}
 
+}
+
+func TestDBConnection(t *testing.T) {
+	_, err := main.DBConnection()
+
+	if err != nil {
+		t.Error("TestDBConnection no ha funcionado: Se obtuvo", err)
+	} else {
+		t.Log("TestDBConnection ha funcionado correctamente.")
+	}
+}
+
+//Handlers.go
+
+func TestHandleCreditAssignment(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/credit-assignment", nil)
+	res := httptest.NewRecorder()
+
+	main.HandleCreditAssignment(res, req)
+
+	// Se espera un BadRequest ya que por consigna si no hay data se debe responder con un 400:
+	if res.Code != http.StatusBadRequest {
+		t.Errorf("TestHandleCreditAssignment no ha funcionado: Se esperaba %d se obtuvo %d", res.Code, http.StatusOK)
+	} else {
+		t.Log("TestHandleCreditAssignment ha funcionado correctamente.")
+	}
+}
+
+func TestHandleStatistics(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/assignment", nil)
+	res := httptest.NewRecorder()
+
+	main.HandleStatistics(res, req)
+
+	if res.Code != http.StatusOK {
+		t.Errorf("TestHandleStatistics no ha funcionado: Se esperaba %d se obtuvo %d", res.Code, http.StatusOK)
+	} else {
+		t.Log("TestHandleStatistics ha funcionado correctamente.")
+	}
+}
+
+func TestHandleDeleteStatistics(t *testing.T) {
+	req := httptest.NewRequest(http.MethodDelete, "/assignment", nil)
+	res := httptest.NewRecorder()
+
+	main.HandleDeleteStatistics(res, req)
+
+	if res.Code != http.StatusOK {
+		t.Errorf("TestHandleDeleteStatistics no ha funcionado: Se esperaba %d se obtuvo %d", res.Code, http.StatusOK)
+	} else {
+		t.Log("TestHandleDeleteStatistics ha funcionado correctamente.")
+	}
 }

@@ -51,7 +51,6 @@ func main() {
 	fmt.Println("Server listen in port:", Port)
 
 	//Endpoints:
-	server.Handle("/", "GET", HandleRoot)
 	server.Handle("/credit-assignment", "POST", HandleCreditAssignment)
 	server.Handle("/statistics", "POST", HandleStatistics)
 	server.Handle("/statistics", "DELETE", HandleDeleteStatistics)

@@ -145,13 +145,15 @@ func CalculateAverage() (err error) {
 	if err != nil {
 		log.Fatalln("SetStatisticData:", err)
 	}
-	DeleteData(statisticsData, average)
+
+	// Se elimina la información de las variables:
+	_, _ = DeleteData(statisticsData, average)
 	return err
 }
 
 // Borra los datos de las variables statistics:
 
-func DeleteData(s Statistics, a Average) {
+func DeleteData(s Statistics, a Average) (Statistics, Average) {
 	s.Average_successful_investment = 0
 	s.Average_unsuccessful_investment = 0
 	s.Total_assignments_made = 0
@@ -159,6 +161,9 @@ func DeleteData(s Statistics, a Average) {
 	s.Total_unsuccessful_assignments = 0
 	a.Positive = 0
 	a.Negative = 0
+	log.Print(s, a)
+
+	return s, a
 }
 
 // Almacena la data recibida a specific_statistics en Firebase:

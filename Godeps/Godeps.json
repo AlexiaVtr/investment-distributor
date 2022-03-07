@@ -1,6 +1,6 @@
 {
 	"ImportPath": "investment-distributor",
-	"GoVersion": "go1.16.7",
+	"GoVersion": "go1.17.7",
 	"GodepVersion": "v74",
 	"Packages": [
 		"./..."

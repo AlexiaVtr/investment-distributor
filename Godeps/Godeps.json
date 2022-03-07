@@ -1,0 +1,10 @@
+{
+	"ImportPath": "Desafio",
+	"GoVersion": "go1.16.7",
+	"GodepVersion": "v74",
+	"Packages": [
+		"./..."
+		],
+		"Deps": []		
+	
+}

@@ -1,5 +1,5 @@
 {
-	"ImportPath": "Desafio",
+	"ImportPath": "investment-distributor",
 	"GoVersion": "go1.16.7",
 	"GodepVersion": "v74",
 	"Packages": [

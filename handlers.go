@@ -52,7 +52,7 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 	PutInvestmentData(average)
 	PutStatisticsData(statisticsData)
 	//Se resetean los datos de las variables usadas:
-	DeleteData(statisticsData, average)
+	statisticsData, average = DeleteData(statisticsData, average)
 }
 
 func HandleStatistics(w http.ResponseWriter, r *http.Request) {

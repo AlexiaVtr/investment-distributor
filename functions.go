@@ -147,7 +147,7 @@ func CalculateAverage() (err error) {
 	}
 
 	// Se elimina la información de las variables:
-	_, _ = DeleteData(statisticsData, average)
+	statisticsData, average = DeleteData(statisticsData, average)
 	return err
 }
 

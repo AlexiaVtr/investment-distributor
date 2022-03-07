@@ -76,7 +76,7 @@ func HandleStatistics(w http.ResponseWriter, r *http.Request) {
 func HandleDeleteStatistics(w http.ResponseWriter, r *http.Request) {
 
 	// Borra los datos de las variables de statistics e investment:
-	_, _ = DeleteData(statisticsData, average)
+	statisticsData, average = DeleteData(statisticsData, average)
 	err := SetStatisticsData(statisticsData)
 	err = SetInvestmentData(average)
 	if err != nil {

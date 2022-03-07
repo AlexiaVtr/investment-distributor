@@ -3,7 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
+
+	"cloud.google.com/go/firestore"
 )
 
 // Interfaces
@@ -40,6 +43,13 @@ func (i Investment) PrintCredit(inv, credit300, credit500, credit700 int32) {
 
 func main() {
 
+	//Cliente Cloud Firestore:
+	client, err = DBConnection()
+	if err != nil {
+		log.Fatal("No se ha podido inicializar la conexión con Firebase:", err)
+	}
+	defer client.Close()
+
 	//Servidor
 
 	// Puerto dinámico:
@@ -64,3 +74,5 @@ var investmentAmount Amount
 var response Credits
 var statisticsData Statistics
 var average Average
+var client *firestore.Client
+var err error

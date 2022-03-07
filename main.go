@@ -9,9 +9,6 @@ import (
 // Interfaces
 type CreditAssing interface {
 	Assing(investment int32) (int32, int32, int32, error)
-
-	// Método que imprime resultado:
-	PrintCredit(inv, credit300, credit500, credit700 int32)
 }
 
 //Manejo de errores
@@ -19,7 +16,7 @@ type error interface {
 	Error() string
 }
 
-//Methods
+//Metodos.
 
 // Control de error de distribución:
 func (m *MyError) Error() string {
@@ -30,7 +27,7 @@ func (m *MyError) Error() string {
 func (i Investment) Assing(n int32) (int32, int32, int32, error) {
 	var credit300, credit500, credit700 int32
 	if n != 0 {
-		return GetCredit(n, credit300, credit500, credit700)
+		return GetCredit(n)
 
 	} else {
 		return credit300, credit500, credit700, errors.New("La inversión debe ser mayor a cero.")

@@ -64,7 +64,7 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 	PutInvestmentData(average)
 	PutStatisticsData(statisticsData)
 	//Se resetean los datos de las variables usadas:
-	DeleteData()
+	DeleteData(statisticsData, average)
 }
 
 func HandleStatistics(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +88,7 @@ func HandleStatistics(w http.ResponseWriter, r *http.Request) {
 func HandleDeleteStatistics(w http.ResponseWriter, r *http.Request) {
 
 	// Borra los datos de las variables de statistics e investment:
-	DeleteData()
+	DeleteData(statisticsData, average)
 	err := SetStatisticsData(statisticsData)
 	err = SetInvestmentData(average)
 	if err != nil {

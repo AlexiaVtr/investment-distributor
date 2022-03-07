@@ -20,14 +20,15 @@ func DBConnection() (*firestore.Client, error) {
 }
 
 // Realiza la repartición de la inversión a los diferentes créditos:
-func GetCredit(inv, credit300, credit500, credit700 int32) (int32, int32, int32, error) {
+func GetCredit(inv int32) (int32, int32, int32, error) {
+	var credit300, credit500, credit700 int32
 	n := inv
 
 	// Se realizan todas las restas posibles en 6 casos:
 	switch {
 
 	case n > 0:
-		credit700, credit500, credit300 = getCredit(n, 700, 500, 300)
+		credit700, credit500, credit300 = MakeCredit(n, 700, 500, 300)
 
 		//Si los contadores son ">0" entonces se finalizó la distribución correctamente:
 		if credit300 != 0 || credit500 != 0 || credit700 != 0 {
@@ -40,34 +41,34 @@ func GetCredit(inv, credit300, credit500, credit700 int32) (int32, int32, int32,
 	case n > 0:
 
 		// El orden de las restas cambia en cada caso:
-		credit300, credit500, credit700 = getCredit(n, 300, 500, 700)
+		credit300, credit500, credit700 = MakeCredit(n, 300, 500, 700)
 		if credit300 != 0 || credit500 != 0 || credit700 != 0 {
 			return credit300, credit500, credit700, nil
 		}
 		fallthrough
 
 	case n > 0:
-		credit500, credit300, credit700 = getCredit(n, 500, 300, 700)
+		credit500, credit300, credit700 = MakeCredit(n, 500, 300, 700)
 		if credit300 != 0 || credit500 != 0 || credit700 != 0 {
 			return credit300, credit500, credit700, nil
 		}
 		fallthrough
 
 	case n > 0:
-		credit500, credit700, credit300 = getCredit(n, 500, 700, 300)
+		credit500, credit700, credit300 = MakeCredit(n, 500, 700, 300)
 		if credit300 != 0 || credit500 != 0 || credit700 != 0 {
 			return credit300, credit500, credit700, nil
 		}
 		fallthrough
 
 	case n > 0:
-		credit700, credit300, credit500 = getCredit(n, 700, 300, 500)
+		credit700, credit300, credit500 = MakeCredit(n, 700, 300, 500)
 		if credit300 != 0 || credit500 != 0 || credit700 != 0 {
 			return credit300, credit500, credit700, nil
 		}
 		fallthrough
 	case n > 0:
-		credit300, credit700, credit500 = getCredit(n, 300, 700, 500)
+		credit300, credit700, credit500 = MakeCredit(n, 300, 700, 500)
 		if credit300 != 0 || credit500 != 0 || credit700 != 0 {
 			return credit300, credit500, credit700, nil
 		}
@@ -79,7 +80,7 @@ func GetCredit(inv, credit300, credit500, credit700 int32) (int32, int32, int32,
 }
 
 // Reutiiza el ciclo for con montos definidos en los parámetros:
-func getCredit(i, a, b, c int32) (int32, int32, int32) {
+func MakeCredit(i, a, b, c int32) (int32, int32, int32) {
 
 	// Las variables son contadores para definir la cantidad de créditos a asignar:
 	var creditA, creditB, creditC int32
@@ -144,20 +145,20 @@ func CalculateAverage() (err error) {
 	if err != nil {
 		log.Fatalln("SetStatisticData:", err)
 	}
-	DeleteData()
+	DeleteData(statisticsData, average)
 	return err
 }
 
 // Borra los datos de las variables statistics:
 
-func DeleteData() {
-	statisticsData.Average_successful_investment = 0
-	statisticsData.Average_unsuccessful_investment = 0
-	statisticsData.Total_assignments_made = 0
-	statisticsData.Total_successful_assignments = 0
-	statisticsData.Total_unsuccessful_assignments = 0
-	average.Positive = 0
-	average.Negative = 0
+func DeleteData(s Statistics, a Average) {
+	s.Average_successful_investment = 0
+	s.Average_unsuccessful_investment = 0
+	s.Total_assignments_made = 0
+	s.Total_successful_assignments = 0
+	s.Total_unsuccessful_assignments = 0
+	a.Positive = 0
+	a.Negative = 0
 }
 
 // Almacena la data recibida a specific_statistics en Firebase:

@@ -127,7 +127,7 @@ func CalculateAverage() (err error) {
 
 	// Toma los datos desde la BD:
 	statisticsData, err = GetStatisticsData()
-
+	log.Print("CalculateAverage:", statisticsData)
 	// Se toma la inversión total almacenada en la bd:
 	average, err = GetInvestmentData()
 
@@ -148,6 +148,7 @@ func CalculateAverage() (err error) {
 
 	// Se elimina la información de las variables:
 	statisticsData, average = DeleteData(statisticsData, average)
+	log.Print("CalculateAverage:", statisticsData, average)
 	return err
 }
 
@@ -161,7 +162,7 @@ func DeleteData(s Statistics, a Average) (Statistics, Average) {
 	s.Total_unsuccessful_assignments = 0
 	a.Positive = 0
 	a.Negative = 0
-	log.Print(s, a)
+	log.Print("Datos eliminados correctamenre:", s, a)
 
 	return s, a
 }
@@ -170,13 +171,13 @@ func DeleteData(s Statistics, a Average) (Statistics, Average) {
 func PutStatisticsData(data Statistics) error {
 	//Merge de los datos ingresados y los datos de la BD:
 	var databd Statistics
-	databd, err = GetStatisticsData()
+	databd, Err = GetStatisticsData()
 	data.Total_assignments_made += databd.Total_assignments_made
 	data.Total_successful_assignments += databd.Total_successful_assignments
 	data.Total_unsuccessful_assignments += databd.Total_unsuccessful_assignments
 	// Se almacenan los datos modificados en Firebase:
-	resultSet, err := client.Collection("statistics").Doc("specific_statistics").Set(context.Background(), data)
-	log.Print(resultSet, "specific_stadistics almacenado con éxito.")
+	resultSet, err := ClientF.Collection("statistics").Doc("specific_statistics").Set(context.Background(), data)
+	log.Print(resultSet, "\nspecific_stadistics almacenadas con éxito.")
 
 	return err
 }
@@ -184,8 +185,8 @@ func PutStatisticsData(data Statistics) error {
 // Reemplaza la bd con la data recibida en specific_stadistic en Firebase:
 func SetStatisticsData(data Statistics) error {
 	// Se almacenan los datos modificados en Firebase:
-	resultSet, err := client.Collection("statistics").Doc("specific_statistics").Set(context.Background(), data)
-	log.Print(resultSet, "specific_stadistics almacenado con éxito.")
+	resultSet, err := ClientF.Collection("statistics").Doc("specific_statistics").Set(context.Background(), data)
+	log.Print(resultSet, "\nspecific_stadistics enviadas con éxito.")
 
 	return err
 }
@@ -194,11 +195,11 @@ func SetStatisticsData(data Statistics) error {
 func PutInvestmentData(data Average) error {
 	//Merge de los datos ingresados y los datos de la BD:
 	var databd Average
-	databd, err = GetInvestmentData()
+	databd, Err = GetInvestmentData()
 	data.Negative += databd.Negative
 	data.Positive += databd.Positive
 	// Se almacenan los datos modificados en Firebase:
-	resultSet, err := client.Collection("statistics").Doc("investment").Set(context.Background(), data)
+	resultSet, err := ClientF.Collection("statistics").Doc("investment").Set(context.Background(), data)
 	log.Print(resultSet, data, "investment almacenado con éxito.")
 
 	return err
@@ -207,8 +208,8 @@ func PutInvestmentData(data Average) error {
 // Reemplaza la bd con la data recibida en investment en Firebase:
 func SetInvestmentData(data Average) error {
 	// Se almacenan los datos modificados en Firebase:
-	resultSet, err := client.Collection("statistics").Doc("investment").Set(context.Background(), data)
-	log.Print(resultSet, data, "investment almacenado con éxito.")
+	resultSet, err := ClientF.Collection("statistics").Doc("investment").Set(context.Background(), data)
+	log.Print(resultSet, data, "investment enviado con éxito.")
 
 	return err
 }
@@ -217,7 +218,7 @@ func SetInvestmentData(data Average) error {
 func GetStatisticsData() (Statistics, error) {
 	var dataS Statistics
 	// Se almacenan los datos de la BD:
-	resultGet, err := client.Collection("statistics").Doc("specific_statistics").Get(context.Background())
+	resultGet, err := ClientF.Collection("statistics").Doc("specific_statistics").Get(context.Background())
 
 	//Se almacena la data en un map:
 	response := resultGet.Data()
@@ -233,7 +234,7 @@ func GetStatisticsData() (Statistics, error) {
 func GetInvestmentData() (Average, error) {
 	var dataS Average
 	// Se almacenan los datos modificados en Firebase:
-	resultGet, err := client.Collection("statistics").Doc("investment").Get(context.Background())
+	resultGet, err := ClientF.Collection("statistics").Doc("investment").Get(context.Background())
 
 	// Se almacena la data en un map:
 	response := resultGet.Data()

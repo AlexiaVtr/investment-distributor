@@ -9,15 +9,15 @@ import (
 
 func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 	var i Investment
+	failInv := false
+
+	// Vacio de variables:
+	statisticsData, average := DeleteData(statisticsData, average)
 
 	//Obtención de requets:
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&investmentAmount)
 
-	//Distribución de la inversión.
-
-	// Se registra la asignación:
-	statisticsData.Total_assignments_made += 1
 	// Se llama al método Assing para obtener los créditos posibles:
 	response.Credit_type_300,
 		response.Credit_type_500,
@@ -27,9 +27,11 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		statisticsData.Total_unsuccessful_assignments += 1
 		PutInvestmentData(average)
+
 		// Se almacena la inversión completa para luego sacar el promedio:
 		average.Negative += int64(investmentAmount.Investment)
-
+		statisticsData.Total_assignments_made += 1
+		failInv = true
 		//Respuesta:
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Println(err)
@@ -39,8 +41,10 @@ func HandleCreditAssignment(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
 		// Adicional se almacena cantidad e inversión en la variable statistics:
-		statisticsData.Total_successful_assignments += 1
-		statisticsData.Total_assignments_made += 1
+		if failInv == false {
+			statisticsData.Total_successful_assignments += 1
+			statisticsData.Total_assignments_made += 1
+		}
 		average.Positive += int64(investmentAmount.Investment)
 		log.Print(statisticsData)
 

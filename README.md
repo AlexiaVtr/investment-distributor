@@ -2,8 +2,7 @@
 ---
 
  <h4>⭐️ 1. Introducción</h4>
-El presente README.md es una guía para la implementación del servicio “Investment Distributor”, indicando sus funcionalidades y características. </br></br>
-ㅤ➢ API: investment-distributor </br>
+
 ㅤ➢ Cloud Hosting: Heroku</br>
 ㅤ➢ Host: https://investment-distributor.herokuapp.com</br>
 ㅤ➢ Port HTTP: 8000</br>
